@@ -1,19 +1,75 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 
 const globalStyles = `
   @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+
   :root { 
     --bg: #030305; --cyan: #00f3ff; --pink: #ff00ff; --red: #ff4757; 
     --green: #32ff7e; --gold: #ffd700; --blue: #0077ff;
     --neon-flow: linear-gradient(90deg, #ff00ff, #00f3ff, #ff00ff, #00f3ff, #ff00ff);
   }
-  * { box-sizing: border-box; transition: all 0.3s ease; outline: none; }
-  body { margin: 0; background: var(--bg); font-family: 'Share Tech Mono', monospace; color: #fff; overflow-x: hidden; }
+
+  /* --- Responsive Fixes --- */
+  * { box-sizing: border-box; transition: background 0.3s ease, border 0.3s ease; outline: none; }
+  
+  body { 
+    margin: 0; 
+    background: var(--bg); 
+    font-family: 'Share Tech Mono', monospace; 
+    color: #fff; 
+    overflow-x: hidden; 
+    width: 100%;
+  }
+
+  /* मोबाइल पर कार्ड को सिकुड़ने से बचाने के लिए चौड़ाई फिक्स */
+  .deal-card, .at-card, .header-box {
+    width: 95% !important;
+    max-width: 350px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+
+  .header-info-container {
+    width: 95% !important;
+    max-width: 350px;
+  }
+
+  /* --- Stable Breathing Animations --- */
+  @keyframes card-breathe-hot {
+    0%, 100% { border-color: rgba(255, 71, 87, 0.3); box-shadow: 0 0 10px rgba(255, 71, 87, 0.2); }
+    50% { border-color: var(--red); box-shadow: 0 0 25px var(--red), inset 0 0 10px rgba(255, 71, 87, 0.3); }
+  }
+
+  @keyframes card-breathe-reg {
+    0%, 100% { border-color: rgba(0, 243, 255, 0.3); box-shadow: 0 0 10px rgba(0, 243, 255, 0.2); }
+    50% { border-color: var(--cyan); box-shadow: 0 0 25px var(--cyan), inset 0 0 10px rgba(0, 243, 255, 0.3); }
+  }
+
+  .deal-card .title-plate { 
+    color: #ffffff !important; 
+    font-weight: 900 !important; 
+    text-shadow: none !important; 
+    animation: none !important;
+  }
+
+  .deal-card.card-glow-hot { animation: card-breathe-hot 4s infinite ease-in-out; border: 2px solid var(--red); }
+  .deal-card.card-glow-reg { animation: card-breathe-reg 4s infinite ease-in-out; border: 2px solid var(--cyan); }
+
+  .field-hot, .field-reg { 
+    border: 1.5px solid #fff !important; 
+    color: #ffffff !important; 
+    font-weight: 900 !important;
+    text-shadow: none !important;
+    box-shadow: none !important;
+  }
+
+  @keyframes btnPulse {
+    0% { box-shadow: 0 0 5px currentColor; }
+    50% { box-shadow: 0 0 20px currentColor; }
+    100% { box-shadow: 0 0 5px currentColor; }
+  }
 
   .fixed-top-zone { position: sticky; top: 0; z-index: 10000; background: var(--bg); padding-bottom: 5px; }
-
-  .header-info-container { position: relative; width: 320px; margin: 0 auto; height: 20px; display: flex; align-items: center; justify-content: space-between; overflow: hidden; }
   .header-info-left { font-size: 8px; color: var(--cyan); text-transform: uppercase; width: 100px; text-align: left; white-space: nowrap; }
   .header-info-right { font-size: 8px; color: var(--gold); width: 100px; text-align: right; white-space: nowrap; }
   
@@ -23,7 +79,7 @@ const globalStyles = `
     white-space: nowrap; z-index: 10001; text-shadow: 0 0 5px var(--cyan);
   }
 
-  .header-box { width: 280px; background: #0a0a0f; border: 1.5px solid #252535; border-radius: 15px; padding: 15px; text-align: center; position: relative; margin: 5px auto 10px auto; box-shadow: 0 0 30px rgba(0,0,0,1); }
+  .header-box { background: #0a0a0f; border: 1.5px solid #252535; border-radius: 15px; padding: 15px; text-align: center; position: relative; margin: 5px auto 10px auto; box-shadow: 0 0 30px rgba(0,0,0,1); }
   .header-box::after { content: ''; position: absolute; top: -2px; left: -2px; right: -2px; bottom: -2px; background: var(--neon-flow); background-size: 300%; border-radius: 16px; z-index: -1; animation: flow 3s linear infinite; }
   @keyframes flow { 0% { background-position: 0% 50%; } 100% { background-position: 200% 50%; } }
   .brand-name { font-size: 24px; font-weight: 900; color: #fff; letter-spacing: 3px; text-transform: uppercase; text-shadow: 0 0 10px var(--cyan); }
@@ -36,25 +92,23 @@ const globalStyles = `
 
   .badge { position: absolute; top: -5px; right: 5px; background: var(--red); color: #fff; font-size: 8px; padding: 2px 6px; border-radius: 10px; font-weight: 900; }
 
-  .deal-card { width: 310px; background: #0d0d12; border-radius: 35px; padding: 65px 20px 15px 20px; margin: 20px auto; border: 2px solid #1a1a25; position: relative; }
-  .sync-blink-hot { animation: fav-style-red 2s ease-in-out infinite !important; }
-  .sync-blink-normal { animation: fav-style-cyan 2s ease-in-out infinite !important; }
+  .deal-card { background: #0d0d12; border-radius: 35px; padding: 65px 20px 15px 20px; margin: 20px auto; position: relative; }
 
-  @keyframes fav-style-red { 0%, 100% { border-color: rgba(255, 71, 87, 0.2); box-shadow: 0 0 5px rgba(255,71,87,0.1); } 50% { border-color: var(--red); box-shadow: 0 0 20px var(--red); } }
-  @keyframes fav-style-cyan { 0%, 100% { border-color: rgba(0, 243, 255, 0.2); box-shadow: 0 0 5px rgba(0, 243, 255, 0.1); } 50% { border-color: var(--cyan); box-shadow: 0 0 20px var(--cyan); } }
-
-  .title-plate { background: #000; border: 1px solid #333; padding: 10px; border-radius: 12px; font-size: 10px; text-align: center; color: #fff; line-height: 1.4; animation: title-glow-slow 3s ease-in-out infinite; }
-  @keyframes title-glow-slow { 0%, 100% { text-shadow: 0 0 2px #fff; opacity: 0.8; } 50% { text-shadow: 0 0 12px var(--cyan); opacity: 1; } }
+  .title-plate { background: #000; padding: 10px; border-radius: 12px; font-size: 10px; text-align: center; line-height: 1.4; }
 
   .ring { width: 38px; height: 38px; border: 1.5px solid #222; border-radius: 50%; display: flex; align-items: center; justify-content: center; position: absolute; top: 15px; background: #000; cursor: pointer; z-index: 10; }
   .card-timer-box { width: 100px; height: 20px; background: #000; border: 1px solid #222; border-radius: 6px; margin: 8px auto; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 900; color: var(--cyan); }
   
   .price-row { display: flex; justify-content: center; align-items: center; gap: 12px; margin: 15px 0; }
   .mrp-cross { color: #666; text-decoration: line-through; text-decoration-color: var(--red); font-size: 16px; }
-  .deal-price { color: var(--cyan); font-size: 22px; font-weight: 900; text-shadow: 0 0 10px var(--cyan); }
+  .deal-price { font-size: 22px; font-weight: 900; color: #fff !important; }
   
   .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
-  .info-cell { background: #000; border: 1.1px solid #1a1a25; padding: 8px; border-radius: 8px; font-size: 9px; text-align: center; }
+  .info-cell { padding: 8px; border-radius: 8px; font-size: 9px; text-align: center; font-weight: 900; color: #fff !important; }
+
+  .coupon-box { display: flex; background: #000; border-radius: 10px; margin-bottom: 10px; border: 1.2px dashed #444; overflow: hidden; height: 34px; align-items: center; }
+  .coupon-text { flex: 1; font-size: 11px; color: var(--gold); text-align: center; letter-spacing: 1px; font-weight: 900; }
+  .copy-btn { width: 50px; height: 100%; background: #222; color: var(--cyan); border: none; font-size: 9px; cursor: pointer; font-weight: 900; }
 
   .click-btn { 
     width: 100%; padding: 12px; border-radius: 25px; border: none; 
@@ -76,12 +130,23 @@ const globalStyles = `
   .timestamp-row { font-size: 8px; color: #666; text-align: center; margin-top: 8px; border-top: 1px solid #111; padding-top: 5px; }
 
   .neon-wrap { position: relative; padding: 2px; border-radius: 25px; margin: 15px auto; width: fit-content; }
-  .at-card { width: 320px; background: #0a0a0f; border-radius: 25px; padding: 18px; border: 1.5px solid #252535; }
-  .at-input, .at-select { width: 100%; background: #000; border: 1.5px solid #222; padding: 10px; color: #fff; border-radius: 10px; text-align: center; font-size: 12px; margin-bottom: 8px; }
+  .at-card { background: #0a0a0f; border-radius: 25px; padding: 18px; border: 1.5px solid #252535; }
+  
+  .at-input, .at-select { 
+    width: 100%; background: #000; border: 1.5px solid #222; padding: 10px; 
+    color: #fff; border-radius: 10px; text-align: center; font-size: 12px; 
+    margin-bottom: 8px;
+  }
+  .at-input:focus { border-color: var(--cyan); box-shadow: 0 0 10px var(--cyan); }
+
   .ctrl-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding: 5px 0; border-bottom: 1px solid #111; }
   .ctrl-label { font-size: 11px; color: #ccc; }
 
-  .action-btn { border-radius: 12px; font-weight: 900; text-transform: uppercase; border: 1.5px solid; background: transparent; cursor: pointer; padding: 8px; font-size: 9px; }
+  .action-btn { 
+    border-radius: 12px; font-weight: 900; text-transform: uppercase; 
+    border: 1.5px solid; background: transparent; cursor: pointer; 
+    padding: 8px; font-size: 9px; animation: btnPulse 3s infinite;
+  }
   .btn-cyan { border-color: var(--cyan); color: var(--cyan); }
   .btn-red { border-color: var(--red); color: var(--red); }
   .btn-green { border-color: var(--green); color: var(--green); }
@@ -94,7 +159,19 @@ const globalStyles = `
 `;
 
 export default function App() {
-  const [view, setView] = useState('AUTH');
+  // Mobile View Force Effect
+  useEffect(() => {
+    const meta = document.createElement('meta');
+    meta.name = "viewport";
+    meta.content = "width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no";
+    document.getElementsByTagName('head')[0].appendChild(meta);
+  }, []);
+
+  // Persistence Logic: Load from LocalStorage
+  const [view, setView] = useState(() => localStorage.getItem('DC_VIEW') || 'AUTH');
+  const [curr, setCurr] = useState(() => JSON.parse(localStorage.getItem('DC_CURR') || 'null'));
+  const [lastLogin, setLastLogin] = useState(() => localStorage.getItem('DC_LAST_LOGIN') || '');
+
   const [authMode, setAuthMode] = useState('Login');
   const [role, setRole] = useState('USER');
   const [mobile, setMobile] = useState('');
@@ -102,11 +179,9 @@ export default function App() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [status, setStatus] = useState('SYSTEM ONLINE');
-  const [curr, setCurr] = useState(null);
   const [toast, setToast] = useState('');
   const [countdown, setCountdown] = useState(10);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [lastLogin, setLastLogin] = useState('');
   const [forgotStep, setForgotStep] = useState(0);
   const [newPass, setNewPass] = useState({ p1: '', p2: '' });
   const [resetTargetId, setResetTargetId] = useState(null);
@@ -115,7 +190,7 @@ export default function App() {
   const [saTab, setSaTab] = useState('HOME');
   const [adTab, setAdTab] = useState('PUBLISH');
   const [uTab, setUTab] = useState('Home');
-  const [form, setForm] = useState({ title: '', mrp: '', price: '', store: 'Amazon', brand: '', url: '', isHot: false, id: null });
+  const [form, setForm] = useState({ title: '', mrp: '', price: '', store: 'Amazon', brand: '', coupon: '', url: '', isHot: false, id: null });
 
   const [users, setUsers] = useState(() => JSON.parse(localStorage.getItem('DC_DB_U') || '[]'));
   const [deals, setDeals] = useState(() => JSON.parse(localStorage.getItem('DC_DB_D') || '[]'));
@@ -127,10 +202,16 @@ export default function App() {
   const emailRef = useRef();
   const nameRef = useRef();
 
+  // Sync with LocalStorage for Persistence
   useEffect(() => { localStorage.setItem('DC_DB_U', JSON.stringify(users)); }, [users]);
   useEffect(() => { localStorage.setItem('DC_DB_D', JSON.stringify(deals)); }, [deals]);
   useEffect(() => { localStorage.setItem('DC_DB_F', JSON.stringify(favs)); }, [favs]);
   useEffect(() => { localStorage.setItem('DC_DB_S', JSON.stringify(sys)); }, [sys]);
+  useEffect(() => { 
+    localStorage.setItem('DC_VIEW', view);
+    localStorage.setItem('DC_CURR', JSON.stringify(curr));
+    localStorage.setItem('DC_LAST_LOGIN', lastLogin);
+  }, [view, curr, lastLogin]);
 
   useEffect(() => {
     const itv = setInterval(() => setBtnToggle(p => !p), 2000);
@@ -160,6 +241,15 @@ export default function App() {
   const resetAuth = () => { 
     setMobile(''); setPassword(''); setName(''); setEmail(''); setStatus('SYSTEM ONLINE'); 
     setForgotStep(0); setNewPass({ p1: '', p2: '' }); 
+  };
+
+  const handleLogout = () => {
+    setView('AUTH');
+    setCurr(null);
+    setLastLogin('');
+    localStorage.removeItem('DC_VIEW');
+    localStorage.removeItem('DC_CURR');
+    localStorage.removeItem('DC_LAST_LOGIN');
   };
 
   const handleAuth = () => {
@@ -208,15 +298,21 @@ export default function App() {
     return `${dt.toLocaleDateString('en-GB')} : ${dt.toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit', hour12:true})}`;
   };
 
+  const copyToClipboard = (txt) => {
+    navigator.clipboard.writeText(txt).then(() => triggerToast('COPIED TO CLIPBOARD!'));
+  };
+
   const DealCard = ({ deal, isAdmin, isSA }) => {
     const off = Math.round(((deal.mrp - deal.price) / deal.mrp) * 100);
     const isFav = (favs[curr?.id] || []).includes(deal.id);
     const clickCount = (deal.clickLog || []).length;
     const favCount = deals.find(d => d.id === deal.id)?.favLog?.length || 0;
-    const blinkClass = deal.isHot ? 'sync-blink-hot' : 'sync-blink-normal';
+    
+    const cardGlowClass = deal.isHot ? 'card-glow-hot' : 'card-glow-reg';
+    const fieldGlowClass = deal.isHot ? 'field-hot' : 'field-reg';
 
     return (
-      <div className={`deal-card ${blinkClass}`} style={{ opacity: deal.isBlocked ? 0.5 : 1 }}>
+      <div className={`deal-card ${cardGlowClass}`} style={{ opacity: deal.isBlocked ? 0.5 : 1 }}>
         {!isAdmin && !isSA && (
           <>
             <div className="ring" style={{ left: '15px' }} onClick={() => {
@@ -237,26 +333,36 @@ export default function App() {
             </div>
           </>
         )}
-        <div className="title-plate">{deal.isHot && '🔥 '}{deal.title.toUpperCase()}</div>
+        <div className={`title-plate ${fieldGlowClass}`}>{deal.isHot && '🔥 '}{deal.title.toUpperCase()}</div>
         <div className="price-row">
             <span className="mrp-cross">₹{deal.mrp}</span>
-            <span className="deal-price" style={{color: deal.isHot ? 'var(--red)' : 'var(--cyan)'}}>₹{deal.price}</span>
+            <span className="deal-price">₹{deal.price}</span>
         </div>
         <div className="info-grid">
-            <div className="info-cell">SAVE ₹{deal.mrp - deal.price}</div>
-            <div className="info-cell" style={{color: deal.isHot ? 'var(--red)' : 'var(--cyan)'}}>{off}% OFF</div>
-            <div className="info-cell">BRAND: {deal.brand}</div>
-            <div className="info-cell" style={{color: 'var(--gold)'}}>{deal.store.toUpperCase()}</div>
+            <div className={`info-cell ${fieldGlowClass}`}>SAVE ₹{deal.mrp - deal.price}</div>
+            <div className={`info-cell ${fieldGlowClass}`}>{off}% OFF</div>
+            <div className={`info-cell ${fieldGlowClass}`}>BRAND: {deal.brand}</div>
+            <div className={`info-cell ${fieldGlowClass}`}>STORE: {deal.store.toUpperCase()}</div>
         </div>
         <div className={`card-timer-box`}>
            {isRefreshing ? 'REFRESHING...' : `SYNC: ${countdown}s`}
         </div>
+        
+        {deal.coupon && (
+            <div className="coupon-box">
+                <div className="coupon-text">{deal.coupon}</div>
+                <button className="copy-btn" onClick={() => copyToClipboard(deal.coupon)}>COPY</button>
+            </div>
+        )}
+
         <button className="click-btn" onClick={() => { 
             if(!(deal.clickLog || []).includes(curr.id)) {
                 setDeals(deals.map(d => d.id === deal.id ? {...d, clickLog: [...(d.clickLog || []), curr.id]} : d));
             }
-            window.open(deal.url, '_blank', 'noopener,noreferrer'); 
+            const newWindow = window.open(deal.url, '_blank', 'noopener,noreferrer');
+            if (newWindow) newWindow.opener = null;
         }}>{btnToggle ? 'CLICK HERE' : 'GRAB ME'}</button>
+
         <div className="stats-row">
             <div className="stat-item" style={{color:'var(--pink)'}}>❤ | {favCount}</div>
             <div className="stat-item" style={{color:'var(--cyan)'}}>🔗 | {clickCount}</div>
@@ -273,13 +379,9 @@ export default function App() {
     );
   };
 
-  const [saUaRole, setSaUaRole] = useState('USER');
+  const unassignedUsers = users.filter(u => u.role === 'USER' && !u.assignedTo).sort((a, b) => a.id - b.id);
   const stores = ["Amazon", "Flipkart", "Myntra", "Meesho", "Shopsy", "Snapdeal", "Blinkit", "BigBasket", "Jio mart", "Zepto", "Samsung", "Xiaomi"];
-  
-  // Smart Unassigned List: Sorted by ID (Signup Time)
-  const unassignedUsers = users
-    .filter(u => u.role === 'USER' && !u.assignedTo)
-    .sort((a, b) => a.id - b.id);
+  const [saUaRole, setSaUaRole] = useState('USER');
 
   return (
     <div>
@@ -296,13 +398,13 @@ export default function App() {
           {view === 'SA' && (
             <div className="nv-bar">
                 {['HOME', 'UA', 'ASSIGN', 'DEALS'].map(t => <div key={t} className={`nv-btn ${saTab===t?'active':''}`} onClick={()=>setSaTab(t)}>{t}</div>)}
-                <div className="nv-btn" style={{color:'var(--red)'}} onClick={()=>{setView('AUTH'); setCurr(null);}}>EXIT</div>
+                <div className="nv-btn" style={{color:'var(--red)'}} onClick={handleLogout}>EXIT</div>
             </div>
           )}
           {view === 'ADMIN' && (
             <div className="nv-bar">
                 {['PUBLISH', 'USER', 'VIEW'].map(t => <div key={t} className={`nv-btn ${adTab===t?'active':''}`} onClick={()=>setAdTab(t)}>{t}</div>)}
-                <div className="nv-btn" style={{color:'var(--red)'}} onClick={()=>{setView('AUTH'); setCurr(null);}}>LOGOUT</div>
+                <div className="nv-btn" style={{color:'var(--red)'}} onClick={handleLogout}>LOGOUT</div>
             </div>
           )}
           {view === 'USER' && (
@@ -312,7 +414,7 @@ export default function App() {
                         {t} {t==='Fav' && (favs[curr?.id]||[]).length > 0 && <span className="badge">{(favs[curr?.id]||[]).length}</span>}
                     </div>
                 ))}
-                <div className="nv-btn" style={{color:'var(--red)'}} onClick={()=>{setView('AUTH'); setCurr(null);}}>EXIT</div>
+                <div className="nv-btn" style={{color:'var(--red)'}} onClick={handleLogout}>EXIT</div>
             </div>
           )}
       </div>
@@ -440,7 +542,6 @@ export default function App() {
                                   <button className="action-btn btn-green" onClick={()=>{
                                       const targetCount = parseInt(adm.tempValue ?? currentAssignedCount);
                                       let updatedUsers = [...users];
-                                      
                                       if(targetCount > currentAssignedCount) {
                                           const diff = targetCount - currentAssignedCount;
                                           const toAssign = unassignedUsers.slice(0, diff);
@@ -457,7 +558,6 @@ export default function App() {
                                               updatedUsers[idx].assignedTo = null;
                                           });
                                       }
-                                      
                                       setUsers(updatedUsers.map(u => u.id === adm.id ? {...u, tempValue: undefined} : u));
                                       triggerToast('SYNC SUCCESSFUL!');
                                   }}>SYNC ASSIGN</button>
@@ -485,6 +585,7 @@ export default function App() {
                     <datalist id="brand-list">
                         {[...new Set(deals.filter(d => d.author === curr.mobile).map(d => d.brand))].map(b => <option key={b} value={b} />)}
                     </datalist>
+                    <input className="at-input" placeholder="COUPON (ALPHANUMERIC ONLY)" value={form.coupon} onChange={e => setForm({...form, coupon: e.target.value.replace(/[^a-zA-Z0-9]/g, '')})} />
                     <input className="at-input" placeholder="URL" value={form.url} onChange={e => setForm({...form, url: e.target.value})} />
                     <div style={{display:'flex', alignItems:'center', justifyContent:'space-between', margin:'8px'}}>
                         <span style={{fontSize:'9px', color: !form.isHot?'var(--cyan)':'#444'}}>REGULAR</span>
@@ -494,7 +595,7 @@ export default function App() {
                     <button className="action-btn btn-cyan" style={{width:'100%', height:'42px', borderRadius:'22px'}} onClick={()=>{
                         const nd = {...form, id: form.id || Date.now(), author: curr.mobile, adminName: curr.name || 'ADMIN', date: new Date().toLocaleDateString(), favLog: form.favLog || [], clickLog: form.clickLog || []};
                         setDeals(form.id ? deals.map(d=>d.id===form.id?nd:d) : [nd, ...deals]);
-                        setForm({title:'', mrp:'', price:'', store:'Amazon', brand:'', url:'', isHot:false, id:null});
+                        setForm({title:'', mrp:'', price:'', store:'Amazon', brand:'', coupon:'', url:'', isHot:false, id:null});
                         triggerToast('DEAL PUBLISHED!'); setAdTab('VIEW');
                     }}>{form.id ? 'UPDATE' : 'PUBLISH'}</button>
                 </div></div>
@@ -529,4 +630,3 @@ export default function App() {
     </div>
   );
 }
-
